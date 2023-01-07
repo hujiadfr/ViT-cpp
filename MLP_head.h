@@ -21,15 +21,13 @@ namespace transformer {
     class MLP_HEAD{
     public:
         static void forward(std::array<std::array<T, DIM>, DEP> &input,
-                            std::array<std::array<T, N_CLASS>, DEP> &output,
+                            std::array<T, N_CLASS> &output,
                             MLPHEADParameter<T,DIM, N_CLASS> &p){
-            auto tmp = std::array<std::array<std::array<T, DIM>, DEP>, 1>{};
+            auto tmp = std::array<std::array<T, DIM>, DEP>{};
             for (int i = 0; i < DEP; ++i){
-                LayerNorm<T, DIM>::forward(input[i], tmp[0][i], p.norm1_p);
+                LayerNorm<T, DIM>::forward(input[i], tmp[i], p.norm1_p);
             }
-            for (int i = 0; i < DEP; ++i){
-                Linear<T, DIM, N_CLASS>::forward(tmp[0][i],output[i] , p.linear_p1);
-            }
+            Linear<T, DIM, N_CLASS>::forward(tmp[DEP], output, p.linear_p1); //linear for class token
         }
     };
 }

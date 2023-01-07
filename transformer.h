@@ -24,7 +24,7 @@ namespace transformer {
     class Transformer {
     public:
         static void forward(std::array<std::array<std::array<T, FIG_WIDTH>, FIG_WIDTH>,IN_CH> &input_fig,
-                            std::array<std::array<T, N_CLASS>, DEP+1> &output,
+                            std::array<T, N_CLASS> &output,
                             std::array<T,DIM> &class_token,
                             transformerParameter<T, DIM, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT, KERNEL_WIDTH, N_CLASS> p) {
             auto patches = std::array<std::array<T, DIM>,DEP+1>{};
