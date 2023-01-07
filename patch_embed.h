@@ -9,10 +9,11 @@
 namespace transformer {
     template<typename T, int KERNEL_WIDTH, int OUT_CH> //OUT_CH = DIM
     struct Conv2dParameter{
-        std::array<std::array<std::array<T, KERNEL_WIDTH>, KERNEL_WIDTH>, OUT_CH> weights;
+        std::array<std::array<std::array<std::array<T, KERNEL_WIDTH>, KERNEL_WIDTH>, 3>, OUT_CH> weights; //3 is in_ch
+        std::array<T, OUT_CH> bias;
         long long count(){
             long long ret = 0;
-            ret += KERNEL_WIDTH * KERNEL_WIDTH * OUT_CH;
+            ret += KERNEL_WIDTH * KERNEL_WIDTH * OUT_CH * 3;
             return ret;
         }
         T dr;
@@ -38,10 +39,10 @@ namespace transformer {
                             for (int n = 0; n < KERNEL_WIDTH; n++)
                                 for (int in_ch = 0; in_ch < IN_CH; in_ch ++) {
                                     if ((i*KERNEL_WIDTH+m)>=0 && (i*KERNEL_WIDTH-m)<FIG_WIDTH && (j*KERNEL_WIDTH-n)>=0 && (j*KERNEL_WIDTH-n)<FIG_WIDTH) {
-                                        tmp += p.weights[OUT_CH][m][n] * input[in_ch][i*KERNEL_WIDTH+m][j*KERNEL_WIDTH+n];
+                                        tmp += p.weights[OUT_CH][in_ch][m][n] * input[in_ch][i*KERNEL_WIDTH+m][j*KERNEL_WIDTH+n];
                                     }
                                 }
-                        temp[out_ch][i][j] = tmp;
+                        temp[out_ch][i][j] = tmp + p.bias[out_ch];
                     }
             //flatten the data
             for (int out_ch = 0; out_ch < OUT_CH; out_ch++) { //out_ch = dim
