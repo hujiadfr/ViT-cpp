@@ -15,15 +15,21 @@ namespace transformer {
             ret += KERNEL_WIDTH * KERNEL_WIDTH * OUT_CH;
             return ret;
         }
+        T dr;
+        Conv2dParameter() {
+            this->dr = 0.1;
+        }
     };
     template<typename T, int KERNEL_WIDTH, int FIG_WIDTH, int OUT_WIDTH, int IN_CH, int OUT_CH, int DEP> //outwidth = fig_width/KERNEL_WIDTH
     class Conv2d{
     public:
         static void forward(std::array<std::array<std::array<T, FIG_WIDTH>, FIG_WIDTH>, IN_CH> &input,
                             std::array<std::array<T, OUT_CH>, DEP+1> &output, //for class token add 1
-                            std::array<T,OUT_CH> &class_token,
+                            std::array<T, OUT_CH> &class_token,
+                            std::array<std::array<T, OUT_CH>, DEP+1> &position_embed,
                             Conv2dParameter<T, KERNEL_WIDTH, OUT_CH> &p) {
             auto temp = std::array<std::array<std::array<T, OUT_WIDTH>, OUT_WIDTH>, OUT_CH>{};
+            auto tmp2 = std::array<std::array<T, OUT_CH>, DEP+1>{};
             for (int i = 0; i < OUT_WIDTH; i++ )
                 for (int j = 0; j < OUT_WIDTH; j++)
                     for (int out_ch = 0; out_ch < OUT_CH; out_ch++) {
@@ -41,16 +47,23 @@ namespace transformer {
             for (int out_ch = 0; out_ch < OUT_CH; out_ch++) { //out_ch = dim
                 for (int i = 0; i < OUT_WIDTH; i++)
                     for (int j = 0; j < OUT_WIDTH; j++)
-                output[i*OUT_WIDTH+j][out_ch] = temp[out_ch][i][j]; //output[dep][dim]
+                tmp2[i*OUT_WIDTH+j][out_ch] = temp[out_ch][i][j]; //output[dep][dim]
             }
             //add class token
             for (int out_ch = 0; out_ch < OUT_CH; out_ch++) {
-                    output[DEP][out_ch] = class_token[out_ch];
+                    tmp2[DEP][out_ch] = class_token[out_ch];
+            }
+            //add position embedding
+            for (int i = 0; i < DEP+1; i++)
+                for(int out_ch = 0; out_ch < OUT_CH; out_ch++) {
+                    tmp2[i][out_ch] += position_embed[i][out_ch];
+                }
+            //dropput
+            for (int i = 0; i < DEP+1; i++) {
+                Dropout<T, OUT_CH>::forward(tmp2[i], output[i], p.dr);
             }
         }
 
     };
-
-
 }
 #endif //VIT_PATCH_EMBED_H

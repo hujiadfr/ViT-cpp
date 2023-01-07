@@ -24,9 +24,11 @@ int main() {
     auto *input_fig = new std::array<std::array<std::array<T, FIG_WIDTH>, FIG_WIDTH>,IN_CH>{};
     auto *output = new std::array<T, N_CLASS>{};
     auto *class_token = new std::array<T,DIM>{};
+    auto *position_embed = new std::array<std::array<T,DIM>, DEP+1>{};
     transformer::Transformer<T, DIM, DEP, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT, KERNEL_WIDTH, FIG_WIDTH, OUT_WIDTH ,IN_CH, N_CLASS>::forward(*input_fig,
                                                                                                                                           *output,
                                                                                                                                           *class_token,
+                                                                                                                                          *position_embed,
                                                                                                                                           *param);
     return 0;
 }
