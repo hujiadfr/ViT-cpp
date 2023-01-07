@@ -25,6 +25,24 @@ int main() {
     auto *output = new std::array<T, N_CLASS>{};
     auto *class_token = new std::array<T,DIM>{};
     auto *position_embed = new std::array<std::array<T,DIM>, DEP+1>{};
+
+    /*Read Parameters*/
+    //class token
+    float x;
+    std::ifstream srcFile("./parameter/token.txt", std::ios::in);
+    if (!srcFile) { //打开失败
+        std::cout << "error opening source file." << std::endl;
+        return 0;
+    }
+    int i = 0;
+    while (srcFile >> x) {
+        (*class_token)[i] = x;
+        i++;
+    }
+    for(i = 0; i < DIM; i++ )
+        std::cout<<(*class_token)[i]<<"\n";
+
+
     transformer::Transformer<T, DIM, DEP, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT, KERNEL_WIDTH, FIG_WIDTH, OUT_WIDTH ,IN_CH, N_CLASS>::forward(*input_fig,
                                                                                                                                           *output,
                                                                                                                                           *class_token,
