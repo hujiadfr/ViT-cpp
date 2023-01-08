@@ -1,7 +1,7 @@
 #include <iostream>
 #include "transformer.h"
 #include "patch_embed.h"
-typedef float T;
+typedef double T;
 // Embedding的维度
 #define DIM 768
 // patches数量？
@@ -15,7 +15,7 @@ typedef float T;
 
 #define FIG_WIDTH 384
 #define KERNEL_WIDTH 16
-#define OUT_WIDTH 14 // 224/16 = 14
+#define OUT_WIDTH 24 // 384/16 = 24
 #define IN_CH 3
 #define N_CLASS 14
 
@@ -115,6 +115,14 @@ int main() {
                                                                                                *class_token,
                                                                                                *position_embed,
                                                                                                *patch_p);
+    std::ofstream outFile("emb_out.txt", std::ios::out);
+    for(i = 0; i < DEP + 1; i++) {
+        for( j = 0; j < DIM; j++) {
+            outFile << (*cov_output)[i][j] << " ";
+        }
+        outFile << "\n";
+    }
+
 
     return 0;
 }
