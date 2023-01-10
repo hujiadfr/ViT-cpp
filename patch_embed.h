@@ -67,8 +67,8 @@ namespace transformer {
 //            for (int i = 0; i < DEP+1; i++) {
 //                Dropout<T, OUT_CH>::forward((*temp2)[i], output[i], p.dr);
 //            }
-            delete[] temp2;
-            delete[] temp;
+            delete temp2;
+            delete temp;
         }
 
     };

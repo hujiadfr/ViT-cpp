@@ -14,8 +14,8 @@
 namespace transformer {
     template<typename T, int DIM, int HEAD_SIZE>
     struct MultiHeadAttentionParameter {
-        LinearParameter <T, DIM, DIM> linear_q_p[HEAD_SIZE], linear_k_p[HEAD_SIZE], linear_v_p[HEAD_SIZE];
-        LinearParameter<T, DIM * HEAD_SIZE, DIM> linear_p;
+        LinearParameter <T, DIM, DIM> linear_q_p, linear_k_p, linear_v_p;
+        LinearParameter<T, DIM, DIM> linear_p;
         T dr;
 
         MultiHeadAttentionParameter() {
@@ -23,7 +23,7 @@ namespace transformer {
         }
 
         long long count() {
-            return linear_k_p[0].count() * HEAD_SIZE * 3 + linear_p.count();
+            return linear_k_p.count() * 3 + linear_p.count();
         }
     };
 
@@ -35,53 +35,69 @@ namespace transformer {
                             std::array<std::array<T, DIM>, DEP> &v_in,
                             std::array<std::array<T, DIM>, DEP> &output,
                             MultiHeadAttentionParameter<T, DIM, HEAD_SIZE> &p) {
-            T scale = 1.0 / sqrt((T) DIM * 1.0 / HEAD_SIZE);
 
-            auto q_tmp = std::array<std::array<std::array<T, DIM>, DEP>, HEAD_SIZE>{};
-            auto k_tmp = std::array<std::array<std::array<T, DIM>, DEP>, HEAD_SIZE>{};
-            auto v_tmp = std::array<std::array<std::array<T, DIM>, DEP>, HEAD_SIZE>{};
-            auto q_tmp_2 = std::array<std::array<std::array<T, DIM>, DEP>, HEAD_SIZE>{};
+            auto *q_tmp = new std::array<std::array<T, DIM>, DEP>{};
+            auto *k_tmp = new std::array<std::array<T, DIM>, DEP>{};
+            auto *v_tmp = new std::array<std::array<T, DIM>, DEP>{};
+            auto *q_tmp_split = new std::array<std::array<std::array<T, DIM/HEAD_SIZE>, HEAD_SIZE>, DEP>{};
+            auto *k_tmp_split = new std::array<std::array<std::array<T, DIM/HEAD_SIZE>, HEAD_SIZE>, DEP>{};
+            auto *v_tmp_split = new std::array<std::array<std::array<T, DIM/HEAD_SIZE>, HEAD_SIZE>, DEP>{};
+            auto *q_k_mul = new std::array<std::array<std::array<T, DEP>, DEP>, HEAD_SIZE>{};
+            auto *q_k_mul_softmax = new std::array<std::array<std::array<T, DEP>, DEP>, HEAD_SIZE>{};
+            auto *q_k_v_mul = new std::array<std::array<std::array<T, DIM/HEAD_SIZE>, HEAD_SIZE>, DEP>{};
+            auto *fc_tmp = new std::array<std::array<T, DIM>, DEP> {};
 
+            MultiLinear<T, DIM, DIM, DEP>::forward(q_in, *q_tmp, p.linear_q_p);
+            MultiLinear<T, DIM, DIM, DEP>::forward(k_in, *k_tmp, p.linear_k_p);
+            MultiLinear<T, DIM, DIM, DEP>::forward(v_in, *v_tmp, p.linear_v_p);
 
-            for (int i = 0; i < HEAD_SIZE; ++i) {
-                MultiLinear<T, DIM, DIM, DEP>::forward(q_in, q_tmp[i], p.linear_q_p[i]);
-                MultiLinear<T, DIM, DIM, DEP>::forward(k_in, k_tmp[i], p.linear_k_p[i]);
-                MultiLinear<T, DIM, DIM, DEP>::forward(v_in, v_tmp[i], p.linear_v_p[i]);
-
-                for (int j = 0; j < DEP; ++j) {
-                    Dropout<T, DIM>::forward(q_tmp[i][j], q_tmp_2[i][j], p.dr);
-                    for (int k = 0; k < DIM; ++k) {
-                        q_tmp_2[i][j][k] *= scale;
+            //split q,k,v
+            for(int i = 0; i < DEP; i++)
+                for(int j = 0; j < HEAD_SIZE; j++)
+                    for(int k = 0; k < DIM/HEAD_SIZE; k++) {
+                        (*q_tmp_split)[i][j][k] = (*q_tmp)[i][j*DIM/HEAD_SIZE + k];
+                        (*k_tmp_split)[i][j][k] = (*k_tmp)[i][j*DIM/HEAD_SIZE + k];
+                        (*v_tmp_split)[i][j][k] = (*v_tmp)[i][j*DIM/HEAD_SIZE + k];
                     }
-                }
-            }
+            // mat q*k
 
-            // Attention(Q, K, V) = softmax(QK^T/sqrt(d_k))V && Concat
-            auto nex_tmp = std::array<std::array<std::array<std::array<T, DEP>, DEP>, HEAD_SIZE>, 2>{};
-            for (int h = 0; h < HEAD_SIZE; ++h) {
-                for (int i = 0; i < DEP; ++i) {
-                    for (int j = 0; j < DEP; ++j) {
-                        nex_tmp[0][h][i][j] = 0;
-                        for (int k = 0; k < DIM; ++k) {
-                            nex_tmp[0][h][i][j] += q_tmp_2[h][i][k] * k_tmp[h][j][k];
-                        }
+            for(int k = 0; k < HEAD_SIZE; k++) {
+                for(int m = 0; m < DEP; m++)
+                    for(int n = 0; n < DEP; n++) {
+                        (*q_k_mul)[k][m][n] = 0;
+                        for(int i = 0; i < DIM/HEAD_SIZE; i++)
+                            (*q_k_mul)[k][m][n] += (*q_tmp_split)[m][k][i] * (*k_tmp_split)[n][k][i];
                     }
-                }
-                Softmax<T, DEP, DEP>::forward(nex_tmp[0][h], nex_tmp[1][h]);
+                Softmax<T, DEP, DEP>::forward((*q_k_mul)[k], (*q_k_mul_softmax)[k]);
             }
-            auto f_nex_tmp = std::array<std::array<T, DIM * HEAD_SIZE>, DEP>{};
-            for (int h = 0; h < HEAD_SIZE; ++h) {
-                for (int i = 0; i < DEP; ++i) {
-                    for (int j = 0; j < DIM; ++j) {
-                        f_nex_tmp[i][h * HEAD_SIZE + j] = 0;
-                        for (int k = 0; k < DEP; ++k) {
-                            f_nex_tmp[i][h * HEAD_SIZE + j] += nex_tmp[1][h][i][k] * v_tmp[h][k][j];
-                        }
+            //mat q*k*v
+            for(int k = 0; k < HEAD_SIZE; k++)
+                for(int m = 0; m < DEP; m++)
+                    for(int n = 0; n < DIM/HEAD_SIZE; n++) {
+                        (*q_k_v_mul)[m][k][n] = 0;
+                        for(int i = 0; i < DEP; i++)
+                            (*q_k_v_mul)[m][k][n] += (*q_k_mul_softmax)[k][m][i] * (*v_tmp_split)[i][k][n];
                     }
-                }
-            }
+            //flatten
+            for(int i = 0; i < DEP; i++)
+                for(int m = 0; m < HEAD_SIZE; m++)
+                    for(int n = 0; n < DIM/HEAD_SIZE; n++) {
+                        (*fc_tmp)[i][m*HEAD_SIZE + n] = (*q_k_v_mul)[i][m][n];
+                    }
 
-            MultiLinear<T, DIM * HEAD_SIZE, DIM, DEP>::forward(f_nex_tmp, output, p.linear_p);
+            MultiLinear<T, DIM, DIM, DEP>::forward(*fc_tmp, output, p.linear_p);
+
+            //free pointers
+            delete q_tmp;
+            delete k_tmp;
+            delete v_tmp;
+            delete q_tmp_split;
+            delete k_tmp_split;
+            delete v_tmp_split;
+            delete q_k_mul;
+            delete q_k_mul_softmax;
+            delete q_k_v_mul;
+            delete fc_tmp;
         }
     };
 }

@@ -1,6 +1,9 @@
 #include <iostream>
 #include "transformer.h"
 #include "patch_embed.h"
+#include "Encoder.h"
+#include "read_parameter.h"
+
 typedef double T;
 // Embedding的维度
 #define DIM 768
@@ -11,13 +14,14 @@ typedef double T;
 // MultiHeadAttention中Head的数量
 #define HEAD_SIZE 8
 // Encoder 的层数
-#define ENC_LAYER_CNT 12
+#define ENC_LAYER_CNT 1
 
 #define FIG_WIDTH 384
 #define KERNEL_WIDTH 16
 #define OUT_WIDTH 24 // 384/16 = 24
 #define IN_CH 3
 #define N_CLASS 14
+
 
 int main() {
     auto *param = new transformer::transformerParameter<T, DIM, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT, KERNEL_WIDTH, N_CLASS>{};
@@ -27,6 +31,9 @@ int main() {
     auto *class_token = new std::array<T,DIM>{};
     auto *position_embed = new std::array<std::array<T,DIM>, DEP+1>{};
     auto *patch_p = new transformer::Conv2dParameter<T, KERNEL_WIDTH, DIM>{};
+    auto *encode_p = new transformer::EncoderParameter<T, DIM, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT>{};
+
+
     /*******Read Parameters********/
     //class token
     T x;
@@ -103,7 +110,7 @@ int main() {
                 (*input_fig)[k][i][j] = x;
             }
     fig_File.close();
-
+    read_block_parameter<T, DIM, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT>(*encode_p);
 //    transformer::Transformer<T, DIM, DEP, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT, KERNEL_WIDTH, FIG_WIDTH, OUT_WIDTH ,IN_CH, N_CLASS>::forward(*input_fig,
 //                                                                                                                                          *output,
 //                                                                                                                                          *class_token,
@@ -115,13 +122,18 @@ int main() {
                                                                                                *class_token,
                                                                                                *position_embed,
                                                                                                *patch_p);
-    std::ofstream outFile("emb_out.txt", std::ios::out);
-    for(i = 0; i < DEP + 1; i++) {
-        for( j = 0; j < DIM; j++) {
-            outFile << (*cov_output)[i][j] << " ";
-        }
-        outFile << "\n";
-    }
+    std::cout<<"Patch Embedding End"<<std::endl;
+//    std::ofstream outFile("emb_out.txt", std::ios::out);
+//    for(i = 0; i < DEP + 1; i++) {
+//        for( j = 0; j < DIM; j++) {
+//            outFile << (*cov_output)[i][j] << " ";
+//        }
+//        outFile << "\n";
+//    }
+
+
+    auto *tmp = new std::array<std::array<T, DIM>,DEP+1>{};
+    transformer::Encoder<T, DIM, DEP+1, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT>::forward(*cov_output, *tmp, *encode_p);
 
 
     return 0;
