@@ -67,6 +67,7 @@ namespace transformer {
                         (*q_k_mul)[k][m][n] = 0;
                         for(int i = 0; i < DIM/HEAD_SIZE; i++)
                             (*q_k_mul)[k][m][n] += (*q_tmp_split)[m][k][i] * (*k_tmp_split)[n][k][i];
+                        (*q_k_mul)[k][m][n] = (*q_k_mul)[k][m][n] / sqrt(DIM/HEAD_SIZE);
                     }
                 Softmax<T, DEP, DEP>::forward((*q_k_mul)[k], (*q_k_mul_softmax)[k]);
             }
