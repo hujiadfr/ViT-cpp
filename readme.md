@@ -16,8 +16,8 @@ typora-copy-images-to: ./Image
 | HEAD_SIZE     | 8     | MultiHeadAttention中Head的数量  |
 | ENC_LAYER_CNT | 12    | Encoder 的层数                  |
 
-
-
+请将encode block的预训练参数解压到parameter文件夹下, 保持block+数字的文件夹名字
+https://zjuintl-my.sharepoint.com/:u:/g/personal/jiarun_19_intl_zju_edu_cn/ERdxaZSizMZOiB3vWGCqZPIB4ktltAS66PPfnouynf3FSQ?e=Eu9iYv
 ## MLP Head
 
 <img src="./Image/image-20230107170417917-1673082668405-10.png" alt="image-20230107170417917" style="zoom:50%;" />
