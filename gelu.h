@@ -14,7 +14,7 @@ namespace transformer {
     public:
         static void forward(std::array<T, DIM> &input, std::array<T, DIM> &output) {
             for (int i = 0; i < DIM; ++i) {
-                output[i] = 0.5*input[i]*(1+tanh(sqrt(2/PI)*input[i]+0.044715*input[i]*input[i]*input[i]));
+                output[i] = 0.5*input[i]*(1+tanh(sqrt(2/PI)*(input[i]+0.044715*input[i]*input[i]*input[i])));
             }
         }
     };

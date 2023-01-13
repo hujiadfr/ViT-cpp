@@ -26,7 +26,7 @@ public:
         T avg = sum / DIM;
         T avg2 = sum2 / DIM;
         T var = avg2 - avg * avg;
-        T sq_var = sqrt(var + 1e-5);
+        T sq_var = sqrt(var + 1e-6);
         for (int i = 0; i < DIM; ++i) {
             output[i] = (input[i] - avg) / sq_var * p.weights[i] + p.bias[i];
         }

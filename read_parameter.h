@@ -179,14 +179,22 @@ void read_block_parameter(transformer::EncoderParameter<T, DIM, DIM_HID, HEAD_SI
         pwff_fc1_bias_File.open(path);
         pwff_fc2_bias_File.open(path2);
 
-        for (int i = 0; i < DIM; i++) {
+        for (int i = 0; i < DIM_HID; i++) {
             pwff_fc1_bias_File >> encode_parameter.layers_p[block].ff_p.linear_p1.bias[i];
-            pwff_fc2_bias_File >> encode_parameter.layers_p[block].ff_p.linear_p2.bias[i];
             for (int j = 0; j < DIM; j++) {
                 pwff_fc1_weight_File >> encode_parameter.layers_p[block].ff_p.linear_p1.weights[j][i];
+            }
+        }
+        for (int i = 0; i < DIM; i++) {
+            pwff_fc2_bias_File >> encode_parameter.layers_p[block].ff_p.linear_p2.bias[i];
+            for (int j = 0; j < DIM_HID; j++) {
                 pwff_fc2_weight_File >> encode_parameter.layers_p[block].ff_p.linear_p2.weights[j][i];
             }
         }
+        pwff_fc2_weight_File.close();
+        pwff_fc1_weight_File.close();
+        pwff_fc1_bias_File.close();
+        pwff_fc2_bias_File.close();
     }
     std::cout<<"Read end"<<std::endl;
 };

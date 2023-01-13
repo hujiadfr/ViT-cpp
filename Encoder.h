@@ -72,7 +72,7 @@ namespace transformer {
 //                }
             for (int i = 0; i < DEP; ++i) {
                 for (int j = 0; j < DIM; ++j) {
-                    output[i][j] = input[i][j] + (*tmp)[3][i][j];
+                    output[i][j] = (*tmp)[1][i][j] + (*tmp)[3][i][j];
                 }
             }
             delete tmp;
