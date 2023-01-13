@@ -4,6 +4,7 @@
 #include "Encoder.h"
 #include "read_parameter.h"
 
+
 typedef double T;
 // Embedding的维度
 #define DIM 768
@@ -12,7 +13,7 @@ typedef double T;
 // FeedForwardNetwork中隐藏层宽度
 #define DIM_HID 3072 //768*4
 // MultiHeadAttention中Head的数量
-#define HEAD_SIZE 8
+#define HEAD_SIZE 12
 // Encoder 的层数
 #define ENC_LAYER_CNT 1
 
@@ -134,7 +135,13 @@ int main() {
 
     auto *tmp = new std::array<std::array<T, DIM>,DEP+1>{};
     transformer::Encoder<T, DIM, DEP+1, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT>::forward(*cov_output, *tmp, *encode_p);
-
-
+    delete tmp;
+    delete cov_output;
+    delete input_fig;
+    delete output;
+    delete class_token;
+    delete position_embed;
+    delete patch_p;
+    delete encode_p;
     return 0;
 }

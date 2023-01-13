@@ -154,7 +154,7 @@ void read_block_parameter(transformer::EncoderParameter<T, DIM, DIM_HID, HEAD_SI
         for (int i = 0; i < DIM; i++) {
             proj_bias_File >> encode_parameter.layers_p[block].attn_p.linear_p.bias[i];
             for (int j = 0; j < DIM; j++) {
-                proj_weight_File >> encode_parameter.layers_p[block].attn_p.linear_p.weights[i][j];
+                proj_weight_File >> encode_parameter.layers_p[block].attn_p.linear_p.weights[j][i];
             }
         }
         proj_bias_File.close();

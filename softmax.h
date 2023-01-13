@@ -7,17 +7,17 @@
 
 #include <array>
 
-template<typename T, int DIM, int DEP>
+template<typename T, int DIM1, int DIM2>
 class Softmax {
 public:
-    static void forward(std::array<std::array<T, DIM>, DEP> &input, std::array<std::array<T, DIM>, DEP> &output) {
-        for (int j = 0; j < DIM; ++j) {
+    static void forward(std::array<std::array<T, DIM1>, DIM2> &input, std::array<std::array<T, DIM1>, DIM2> &output) {
+        for (int i = 0; i < DIM1; ++i) {
             T tmp = 0;
-            for (int i = 0; i < DEP; ++i) {
-                tmp += input[i][j];
+            for (int j = 0; j < DIM2; ++j) {
+                tmp += exp(input[i][j]);
             }
-            for (int i = 0; i < DEP; ++i) {
-                output[i][j] = input[i][j] / tmp;
+            for (int j = 0; j < DIM2; ++j) {
+                output[i][j] = exp(input[i][j]) / tmp;
             }
         }
     }
