@@ -5,10 +5,10 @@
 #ifndef VIT_READ_PARAMETER_H
 #define VIT_READ_PARAMETER_H
 // now only for encode_parameter
-#include "Encoder.h"
+#include "transformer.h"
 #include <thread>
-template<typename T, int DIM, int DIM_HID, int HEAD_SIZE, int LAYER_CNT>
-void read_block(transformer::EncoderParameter<T, DIM, DIM_HID, HEAD_SIZE, LAYER_CNT> &encode_parameter, int block) {
+template<typename T, int DIM, int DIM_HID, int LAYER_CNT>
+void read_block(transformer::EncoderParameter<T, DIM, DIM_HID, LAYER_CNT> &encode_parameter, int block) {
     std::ifstream norm1_bias_File;
     std::ifstream norm1_weight_File;
     std::ifstream norm2_bias_File;
@@ -197,22 +197,33 @@ void read_block(transformer::EncoderParameter<T, DIM, DIM_HID, HEAD_SIZE, LAYER_
     pwff_fc2_bias_File.close();
 }
 
-template<typename T, int DIM, int DIM_HID, int HEAD_SIZE, int LAYER_CNT>
-void read_block_parameter(transformer::EncoderParameter<T, DIM, DIM_HID, HEAD_SIZE, LAYER_CNT> &encode_parameter) {
+template<typename T, int DIM, int DIM_HID, int LAYER_CNT, int KERNEL_WIDTH, int N_CLASS>
+void read_block_parameter(transformer::transformerParameter<T, DIM, DIM_HID, LAYER_CNT, KERNEL_WIDTH, N_CLASS> &parameter) {
     std::thread read_block_thread[12];
     for (int block = 0; block < LAYER_CNT; block++)
-        read_block_thread[block] = std::thread(read_block<T, DIM, DIM_HID, HEAD_SIZE, LAYER_CNT>, std::ref(encode_parameter), block);
+        read_block_thread[block] = std::thread(read_block<T, DIM, DIM_HID, LAYER_CNT>, std::ref(parameter.encoder_p), block);
     for (int block = 0; block < LAYER_CNT; block++)
         read_block_thread[block].join();
     std::cout<<"Start Read MLP head\n";
-//    /*****Read MLP Head*****/
-//    std::ifstream MLP_head_fc_bias_File;
-//    std::ifstream MLP_head_fc_weight_File;
-//    std::ifstream MLP_head_norm_bias_File;
-//    std::ifstream MLP_head_norm_weight_File;
-//    MLP_head_norm_weight_File.open("./parameter/")
-
-
+    /*****Read MLP Head*****/
+    std::ifstream MLP_head_fc_bias_File;
+    std::ifstream MLP_head_fc_weight_File;
+    std::ifstream MLP_head_norm_bias_File;
+    std::ifstream MLP_head_norm_weight_File;
+    MLP_head_norm_weight_File.open("./parameter/head/norm_weight.txt");
+    MLP_head_norm_bias_File.open("./parameter/head/norm_bias.txt");
+    MLP_head_fc_weight_File.open("./parameter/head/fc_weight.txt");
+    MLP_head_fc_bias_File.open("./parameter/head/fc_bias.txt");
+    for(int i = 0; i < DIM; i++){
+        MLP_head_norm_weight_File >> parameter.mlp_head_p.norm1_p.weights[i];
+        MLP_head_norm_bias_File >> parameter.mlp_head_p.norm1_p.bias[i];
+    }
+    for(int i = 0; i < N_CLASS; i++) {
+        MLP_head_fc_bias_File >> parameter.mlp_head_p.linear_p1.bias[i];
+        for(int j = 0; j < DIM; j++) {
+            MLP_head_fc_weight_File >> parameter.mlp_head_p.linear_p1.weights[j][i];
+        }
+    }
     std::cout<<"Read end"<<std::endl;
-};
+}
 #endif //VIT_READ_PARAMETER_H

@@ -8,19 +8,13 @@
 #include <array>
 
 #include "linear.h"
-#include "dropout.h"
 #include "softmax.h"
 
 namespace transformer {
-    template<typename T, int DIM, int HEAD_SIZE>
+    template<typename T, int DIM>
     struct MultiHeadAttentionParameter {
         LinearParameter <T, DIM, DIM> linear_q_p, linear_k_p, linear_v_p;
         LinearParameter<T, DIM, DIM> linear_p;
-        T dr;
-
-        MultiHeadAttentionParameter() {
-            dr = 0.1;
-        }
 
         long long count() {
             return linear_k_p.count() * 3 + linear_p.count();
@@ -34,7 +28,7 @@ namespace transformer {
                             std::array<std::array<T, DIM>, DEP> &k_in,
                             std::array<std::array<T, DIM>, DEP> &v_in,
                             std::array<std::array<T, DIM>, DEP> &output,
-                            MultiHeadAttentionParameter<T, DIM, HEAD_SIZE> &p) {
+                            MultiHeadAttentionParameter<T, DIM> &p) {
 
             auto *q_tmp = new std::array<std::array<T, DIM>, DEP>{};
             auto *k_tmp = new std::array<std::array<T, DIM>, DEP>{};
@@ -67,7 +61,7 @@ namespace transformer {
                         (*q_k_mul)[k][m][n] = 0;
                         for(int i = 0; i < DIM/HEAD_SIZE; i++)
                             (*q_k_mul)[k][m][n] += (*q_tmp_split)[k][m][i] * (*k_tmp_split)[k][n][i];
-                        (*q_k_mul)[k][m][n] = (*q_k_mul)[k][m][n] / sqrt(DIM/HEAD_SIZE);
+                        (*q_k_mul)[k][m][n] = (*q_k_mul)[k][m][n] / sqrt((double)DIM/HEAD_SIZE);
                     }
                 Softmax<T, DEP, DEP>::forward((*q_k_mul)[k], (*q_k_mul_softmax)[k]);
             }
@@ -103,4 +97,4 @@ namespace transformer {
         }
     };
 }
-#endif //VITS_CPP_ATTENTION_H
+#endif //VIT_ATTENTION_H

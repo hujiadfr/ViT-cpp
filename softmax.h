@@ -22,4 +22,4 @@ public:
         }
     }
 };
-#endif //VITS_CPP_SOFTMAX_H
+#endif //VIT_SOFTMAX_H

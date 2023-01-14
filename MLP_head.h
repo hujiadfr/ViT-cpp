@@ -23,11 +23,12 @@ namespace transformer {
         static void forward(std::array<std::array<T, DIM>, DEP> &input,
                             std::array<T, N_CLASS> &output,
                             MLPHEADParameter<T,DIM, N_CLASS> &p){
-            auto tmp = std::array<std::array<T, DIM>, DEP>{};
+            auto *tmp = new std::array<std::array<T, DIM>, DEP>{};
             for (int i = 0; i < DEP; ++i){
-                LayerNorm<T, DIM>::forward(input[i], tmp[i], p.norm1_p);
+                LayerNorm<T, DIM>::forward(input[i], (*tmp)[i], p.norm1_p);
             }
-            Linear<T, DIM, N_CLASS>::forward(tmp[0], output, p.linear_p1); //linear for class token
+            Linear<T, DIM, N_CLASS>::forward((*tmp)[0], output, p.linear_p1); //linear for class token
+            delete tmp;
         }
     };
 }

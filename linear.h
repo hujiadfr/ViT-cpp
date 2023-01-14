@@ -53,6 +53,6 @@ namespace transformer {
             }
         }
     };
-};
+}
 
-#endif //VITS_LINEAR_H
+#endif //VIT_LINEAR_H

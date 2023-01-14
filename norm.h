@@ -33,4 +33,4 @@ public:
     }
 };
 
-#endif //TRANSFORMER_NORM_H
+#endif //VIT_NORM_H

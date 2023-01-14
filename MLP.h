@@ -7,7 +7,6 @@
 #include <array>
 
 #include "linear.h"
-#include "dropout.h"
 #include "gelu.h"
 
 namespace transformer {
@@ -15,12 +14,6 @@ namespace transformer {
     struct MLPParameter {
         LinearParameter<T, DIM_IN, DIM_HID> linear_p1;
         LinearParameter<T, DIM_HID, DIM_OUT> linear_p2;
-        T dr;
-
-        MLPParameter() {
-            this->dr = 0.1;
-        }
-
         long long count() {
             return linear_p1.count() + linear_p2.count();
         }

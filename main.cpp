@@ -1,7 +1,6 @@
 #include <iostream>
 #include "transformer.h"
 #include "patch_embed.h"
-#include "Encoder.h"
 #include "read_parameter.h"
 
 
@@ -21,18 +20,16 @@ typedef double T;
 #define KERNEL_WIDTH 16
 #define OUT_WIDTH 24 // 384/16 = 24
 #define IN_CH 3
-#define N_CLASS 14
+#define N_CLASS 1000
 
 
 int main() {
-    auto *param = new transformer::transformerParameter<T, DIM, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT, KERNEL_WIDTH, N_CLASS>{};
+    auto *param = new transformer::transformerParameter<T, DIM, DIM_HID, ENC_LAYER_CNT, KERNEL_WIDTH, N_CLASS>{};
     std::cout << "parameters count: " << param->count() << std::endl;
     auto *input_fig = new std::array<std::array<std::array<T, FIG_WIDTH>, FIG_WIDTH>,IN_CH>{};
     auto *output = new std::array<T, N_CLASS>{};
     auto *class_token = new std::array<T,DIM>{};
     auto *position_embed = new std::array<std::array<T,DIM>, DEP+1>{};
-    auto *patch_p = new transformer::Conv2dParameter<T, KERNEL_WIDTH, DIM>{};
-    auto *encode_p = new transformer::EncoderParameter<T, DIM, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT>{};
 
 
     /*******Read Parameters********/
@@ -57,17 +54,15 @@ int main() {
         std::cout << "error opening source file." << std::endl;
         return 0;
     }
-    i = 0;
-    int j = 0;
-    int dim = 0;
-    int k = 0;
+    int j;
+    int dim;
+    int k;
     for(dim = 0; dim < DIM; dim ++) {
         for (k = 0; k < 3; k++)
             for (i = 0; i < 16; i++)
                 for (j = 0; j < 16; j++) {
                     weight_File >> x;
                     (param)->patch_p.weights[dim][k][i][j] = x;
-                    patch_p->weights[dim][k][i][j] = x;
                 }
 
     }
@@ -84,7 +79,6 @@ int main() {
     i = 0;
     while (bias_File >> x) {
         (param)->patch_p.bias[i] = x;
-        patch_p->bias[i] = x;
         i++;
     }
     bias_File.close();
@@ -111,31 +105,19 @@ int main() {
                 (*input_fig)[k][i][j] = x;
             }
     fig_File.close();
-    read_block_parameter<T, DIM, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT>(*encode_p);
-//    transformer::Transformer<T, DIM, DEP, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT, KERNEL_WIDTH, FIG_WIDTH, OUT_WIDTH ,IN_CH, N_CLASS>::forward(*input_fig,
-//                                                                                                                                          *output,
-//                                                                                                                                          *class_token,
-//                                                                                                                                          *position_embed,
-//                                                                                                                                          *param);
-    auto *cov_output = new std::array<std::array<T, DIM>, DEP+1>{};
-    transformer::Conv2d<T,  KERNEL_WIDTH,  FIG_WIDTH,  OUT_WIDTH,  IN_CH,  DIM,  DEP>::forward(*input_fig,
-                                                                                               *cov_output,
-                                                                                               *class_token,
-                                                                                               *position_embed,
-                                                                                               *patch_p);
-    std::cout<<"Patch Embedding End"<<std::endl;
-
-
-
-    auto *tmp = new std::array<std::array<T, DIM>,DEP+1>{};
-    transformer::Encoder<T, DIM, DEP+1, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT>::forward(*cov_output, *tmp, *encode_p);
-    delete tmp;
-    delete cov_output;
+    read_block_parameter<T, DIM, DIM_HID, ENC_LAYER_CNT, KERNEL_WIDTH, N_CLASS>(*param);
+    transformer::Transformer<T, DIM, DEP, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT, KERNEL_WIDTH, FIG_WIDTH, OUT_WIDTH ,IN_CH, N_CLASS>::forward(*input_fig,
+                                                                                                                                          *output,
+                                                                                                                                          *class_token,
+                                                                                                                                          *position_embed,
+                                                                                                                                          *param);
+    std::ofstream out_File;
+    out_File.open("out.txt");
+    for(i = 0; i < N_CLASS; i++)
+        out_File << (*output)[i]<<"\n";
     delete input_fig;
     delete output;
     delete class_token;
     delete position_embed;
-    delete patch_p;
-    delete encode_p;
     return 0;
 }
