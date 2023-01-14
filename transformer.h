@@ -33,8 +33,8 @@ namespace transformer {
         Conv2d<T, KERNEL_WIDTH, FIG_WIDTH, OUT_WIDTH, IN_CH, DIM, DEP>::forward(input_fig, *patches, class_token, position_embed, p.patch_p); //OUT_CH = DIM
 //            Encoder<T, DIM, DEP+1, DIM_HID, HEAD_SIZE, ENC_LAYER_CNT>::forward(patches, tmp, p.encoder_p); //we have class token, so dep+1
 //            MLP_HEAD<T, DIM, DEP+1, N_CLASS>::forward(tmp, output, p.mlp_head_p);
-        delete[] patches;
-        delete[] tmp;
+        delete patches;
+        delete tmp;
     }
     };
 }

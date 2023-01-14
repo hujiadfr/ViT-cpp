@@ -15,7 +15,7 @@ typedef double T;
 // MultiHeadAttention中Head的数量
 #define HEAD_SIZE 12
 // Encoder 的层数
-#define ENC_LAYER_CNT 1
+#define ENC_LAYER_CNT 12
 
 #define FIG_WIDTH 384
 #define KERNEL_WIDTH 16
@@ -124,13 +124,7 @@ int main() {
                                                                                                *position_embed,
                                                                                                *patch_p);
     std::cout<<"Patch Embedding End"<<std::endl;
-//    std::ofstream outFile("emb_out.txt", std::ios::out);
-//    for(i = 0; i < DEP + 1; i++) {
-//        for( j = 0; j < DIM; j++) {
-//            outFile << (*cov_output)[i][j] << " ";
-//        }
-//        outFile << "\n";
-//    }
+
 
 
     auto *tmp = new std::array<std::array<T, DIM>,DEP+1>{};

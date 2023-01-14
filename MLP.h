@@ -32,13 +32,10 @@ namespace transformer {
         static void forward(std::array<T, DIM_IN> &input,
                             std::array<T, DIM_OUT> &output,
                             MLPParameter<T, DIM_IN, DIM_OUT, DIM_HID> &ff_p) {
-            auto tmp = std::array<std::array<T, DIM_HID>, 3>{};
-//            auto tmp2 = std::array<T, DIM_OUT>{};
+            auto tmp = std::array<std::array<T, DIM_HID>, 2>{};
             Linear<T, DIM_IN, DIM_HID>::forward(input, tmp[0], ff_p.linear_p1);
             Gelu<T, DIM_HID>::forward(tmp[0], tmp[1]);
-//            Dropout<T, DIM_HID>::forward(tmp[1], tmp[2], ff_p.dr);
             Linear<T, DIM_HID, DIM_OUT>::forward(tmp[1], output, ff_p.linear_p2);
-//            Dropout<T, DIM_OUT>::forward(tmp2, output, ff_p.dr);
         }
     };
 

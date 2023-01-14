@@ -16,10 +16,6 @@ namespace transformer {
             ret += KERNEL_WIDTH * KERNEL_WIDTH * OUT_CH * 3;
             return ret;
         }
-        T dr;
-        Conv2dParameter() {
-            this->dr = 0.1;
-        }
     };
     template<typename T, int KERNEL_WIDTH, int FIG_WIDTH, int OUT_WIDTH, int IN_CH, int OUT_CH, int DEP> //outwidth = fig_width/KERNEL_WIDTH
     class Conv2d{
@@ -64,9 +60,7 @@ namespace transformer {
                     output[i][out_ch] = (*temp2)[i][out_ch];
                 }
             //dropput
-//            for (int i = 0; i < DEP+1; i++) {
-//                Dropout<T, OUT_CH>::forward((*temp2)[i], output[i], p.dr);
-//            }
+
             delete temp2;
             delete temp;
         }
