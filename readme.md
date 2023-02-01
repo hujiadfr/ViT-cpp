@@ -13,8 +13,12 @@
 | HEAD_SIZE     | 12    | The number of heads in MultiHeadAttention module |
 | ENC_LAYER_CNT | 12    | The number of Encoder blocks                 |
 | N_CLASS       | 1000  | The dimension of final prediction                        |
-Please extract the pre-trained encoder block paramters to 'parameter' folder. 
+
+## Pre-trained Parameters
+Please extract the pre-trained encoder block paramters to 'parameter' folder.
+
 https://zjuintl-my.sharepoint.com/:u:/g/personal/jiarun_19_intl_zju_edu_cn/ERdxaZSizMZOiB3vWGCqZPIB4ktltAS66PPfnouynf3FSQ?e=Eu9iYv
+
 ## MLP Head
 
 <img src="./Image/image-20230107170417917-1673082668405-10.png" alt="image-20230107170417917" style="zoom:50%;" />
